@@ -2,14 +2,28 @@
   "Admins": [
     {
       "Id": 1,
-      "Name": "Default Admin"
+      "Name": "Sistemas",
+      "LastName": "Administrators",
+      "Email": "admin@example.com",
+      "PhoneNumber": "+371 12345678",
+      "Password": "admin123",
+      "IsActive": true
     }
   ],
   "Clients": [
     {
       "Id": 1,
       "FirstName": "Default",
-      "LastName": "Client"
+      "LastName": "Client",
+      "Email": null,
+      "PhoneNumber": null
+    },
+    {
+      "Id": 2,
+      "FirstName": "Pirmais ",
+      "LastName": "Klients",
+      "Email": null,
+      "PhoneNumber": null
     }
   ],
   "Projects": []

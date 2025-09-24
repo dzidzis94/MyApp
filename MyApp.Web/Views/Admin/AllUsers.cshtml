@@ -1,0 +1,398 @@
+﻿@model IEnumerable<MyApp.Web.Models.UserViewModel>
+@{
+    ViewData["Title"] = "Visi Lietotāji";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .user-card {
+            transition: all 0.3s ease;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+            .user-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .avatar-admin {
+            background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);
+        }
+
+        .avatar-client {
+            background: linear-gradient(135deg, #4cc9f0 0%, #4895ef 100%);
+        }
+
+        .user-status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-admin {
+            background-color: rgba(67, 97, 238, 0.15);
+            color: #4361ee;
+        }
+
+        .status-client {
+            background-color: rgba(76, 201, 240, 0.15);
+            color: #4cc9f0;
+        }
+
+        .status-inactive {
+            background-color: rgba(108, 117, 125, 0.15);
+            color: #6c757d;
+        }
+
+        .search-box {
+            position: relative;
+            max-width: 400px;
+        }
+
+            .search-box input {
+                padding-left: 45px;
+                border-radius: 25px;
+                border: 2px solid #e9ecef;
+            }
+
+            .search-box i {
+                position: absolute;
+                left: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #6c757d;
+            }
+
+        .action-btns .btn {
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            margin-left: 0.3rem;
+        }
+
+        .form-check-input:checked {
+            background-color: #4361ee;
+            border-color: #4361ee;
+        }
+
+        /* Ziņojumu stili */
+        .alert-fixed {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+        }
+    </style>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-fixed alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-fixed alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="admin-header">
+    <div>
+        <h1>Visi Lietotāji</h1>
+        <p class="text-muted mb-0">Pārvaldiet visus sistēmas lietotājus - administratorus un klientus</p>
+    </div>
+    <div class="user-info">
+        <div class="user-avatar avatar-admin">AD</div>
+        <div>
+            <div>Admin Lietotājs</div>
+            <small>Kopā lietotāji: @Model.Count()</small>
+        </div>
+    </div>
+</div>
+
+<!-- Action Bar -->
+<div class="quick-actions mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" class="form-control" placeholder="Meklēt lietotājus..." id="searchInput">
+        </div>
+        <div>
+            <a href="@Url.Action("AddUser")" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Pievienot Jaunu Lietotāju
+            </a>
+            <button class="btn btn-outline-primary me-2" onclick="filterUsers('all')">
+                <i class="fas fa-users me-2"></i>Visi
+            </button>
+            <button class="btn btn-outline-primary me-2" onclick="filterUsers('admin')">
+                <i class="fas fa-user-cog me-2"></i>Administratori
+            </button>
+            <button class="btn btn-outline-primary" onclick="filterUsers('client')">
+                <i class="fas fa-user-friends me-2"></i>Klienti
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Users Grid -->
+<div class="row g-4" id="usersGrid">
+    @foreach (var user in Model)
+    {
+        <div class="col-md-6 col-lg-4 user-card-container" data-user-type="@user.UserType.ToLower()">
+            <div class="user-card card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="user-avatar @(user.UserType == "Admin" ? "avatar-admin" : "avatar-client")">
+                            @user.Initials
+                        </div>
+                        <div class="text-end">
+                            <span class="user-status @(user.UserType == "Admin" ? "status-admin" : "status-client") @(!user.IsActive ? "status-inactive" : "")">
+                                @user.UserType @(!user.IsActive ? " (Neaktīvs)" : "")
+                            </span>
+                            <div class="form-check form-switch mt-1">
+                                <input class="form-check-input user-toggle"
+                                       type="checkbox"
+                                       data-user-id="@user.Id"
+                                       data-user-type="@user.UserType"
+                                @(user.IsActive ? "checked" : "")>
+                                <label class="form-check-label small">Aktīvs</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="card-title">@user.FullName</h5>
+                    <p class="text-muted">@(user.UserType == "Admin" ? "Sistēmas administrators" : "Klients")</p>
+
+                    <div class="user-info mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-envelope text-muted me-2"></i>
+                            <small>@user.Email</small>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-phone text-muted me-2"></i>
+                            <small>@(user.PhoneNumber ?? "Nav norādīts")</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas @(user.UserType == "Admin" ? "fa-shield-alt" : "fa-briefcase") text-muted me-2"></i>
+                            <small>
+                                @if (user.UserType == "Admin")
+                                {
+                                    <text>Pilnas pieejas tiesības</text>
+                                }
+                                else
+                                {
+                                    <text>@user.ProjectCount projekti</text>
+                                }
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-light text-dark">
+                            <i class="fas fa-calendar me-1"></i>
+                            @user.CreatedDate.ToString("yyyy-MM-dd")
+                        </span>
+                        <div class="action-btns">
+                            <a href="@Url.Action("UserDetails", new { id = user.Id, userType = user.UserType })"
+                               class="btn btn-sm btn-outline-primary" title="Skatīt">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="@Url.Action("EditUser", new { id = user.Id, userType = user.UserType })"
+                               class="btn btn-sm btn-outline-secondary" title="Rediģēt">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger" title="Dzēst"
+                                    onclick="confirmDelete(@user.Id, '@user.UserType', '@user.FullName')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5">
+        <i class="fas fa-users fa-4x text-muted mb-3"></i>
+        <h3 class="text-muted">Nav atrasts neviens lietotājs</h3>
+        <p class="text-muted">Pievienojiet pirmo lietotāju, noklikšķinot uz pogas "Pievienot Jaunu Lietotāju"</p>
+        <a href="@Url.Action("AddUser")" class="btn btn-primary mt-3">
+            <i class="fas fa-plus me-2"></i>Pievienot Pirmo Lietotāju
+        </a>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // Lietotāju meklēšana
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const userCards = document.querySelectorAll('.user-card-container');
+
+            userCards.forEach(card => {
+                const userName = card.querySelector('.card-title').textContent.toLowerCase();
+                const userEmail = card.querySelector('.fa-envelope').nextElementSibling.textContent.toLowerCase();
+
+                if (userName.includes(searchTerm) || userEmail.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Lietotāju filtrēšana pēc tipa
+        function filterUsers(type) {
+            const userCards = document.querySelectorAll('.user-card-container');
+
+            userCards.forEach(card => {
+                if (type === 'all' || card.getAttribute('data-user-type') === type) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Aktīvās pogas izskata maiņa
+            document.querySelectorAll('.btn-outline-primary').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline-primary');
+            });
+
+            if (type === 'all') {
+                event.target.classList.remove('btn-outline-primary');
+                event.target.classList.add('btn-primary');
+            }
+        }
+
+        // Lietotāja statusa pārslēgšana
+        document.querySelectorAll('.user-toggle').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const userId = this.getAttribute('data-user-id');
+                const userType = this.getAttribute('data-user-type');
+                const isActive = this.checked;
+
+                if (confirm(`Vai tiešām vēlaties ${isActive ? 'aktivizēt' : 'deaktivizēt'} šo lietotāju?`)) {
+                    fetch('/Admin/ToggleUserStatus', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            userId: parseInt(userId),
+                            userType: userType,
+                            isActive: isActive
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showNotification(data.message, 'success');
+                            // Pārlādē lapu, lai atjauninātu statusa rādītāju
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            showNotification(data.message, 'error');
+                            this.checked = !isActive; // Atgriež atpakaļ
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('Radās kļūda', 'error');
+                        this.checked = !isActive; // Atgriež atpakaļ
+                    });
+                } else {
+                    this.checked = !isActive; // Atgriež atpakaļ, ja lietotājs atceļ
+                }
+            });
+        });
+
+        // Lietotāja dzēšanas apstiprinājums
+        function confirmDelete(userId, userType, userName) {
+            if (confirm(`Vai tiešām vēlaties dzēst lietotāju "${userName}"? Šo darbību nevarēs atsaukt!`)) {
+                // Izveido formu dzēšanai
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/Admin/DeleteUser';
+
+                // Pievieno CSRF token
+                const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '__RequestVerificationToken';
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+
+                // Pievieno ID un userType
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = userId;
+                form.appendChild(idInput);
+
+                const typeInput = document.createElement('input');
+                typeInput.type = 'hidden';
+                typeInput.name = 'userType';
+                typeInput.value = userType;
+                form.appendChild(typeInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        // Paziņojumu rādīšana
+        function showNotification(message, type) {
+            // Noņem esošos paziņojumus
+            document.querySelectorAll('.alert-fixed').forEach(alert => alert.remove());
+
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-fixed alert-dismissible fade show`;
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Automātiski noņem pēc 3 sekundēm
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 3000);
+        }
+
+        // Automātiski noņem paziņojumus pēc 5 sekundēm
+        setTimeout(() => {
+            document.querySelectorAll('.alert-fixed').forEach(alert => {
+                alert.remove();
+            });
+        }, 5000);
+    </script>
+}

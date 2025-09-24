@@ -1,0 +1,265 @@
+﻿@model MyApp.Web.Models.UserViewModel
+@{
+    ViewData["Title"] = "Lietotāja informācija";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .profile-header {
+            background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-right: 2rem;
+        }
+
+        .detail-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+            .detail-item:last-child {
+                border-bottom: none;
+            }
+
+        .detail-label {
+            font-weight: 600;
+            color: #6c757d;
+            min-width: 150px;
+        }
+
+        .detail-value {
+            flex: 1;
+        }
+
+        .badge-admin {
+            background-color: #4361ee;
+            color: white;
+        }
+
+        .badge-client {
+            background-color: #4cc9f0;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+    </style>
+}
+
+<div class="profile-header">
+    <div class="d-flex align-items-center">
+        <div class="profile-avatar">
+            @Model.Initials
+        </div>
+        <div>
+            <h1 class="mb-2">@Model.FullName</h1>
+            <div class="d-flex align-items-center">
+                <span class="badge @(Model.UserType == "Admin" ? "badge-admin" : "badge-client") me-3">
+                    @Model.UserType
+                </span>
+                <span class="badge bg-light text-dark">
+                    <i class="fas fa-calendar me-1"></i>
+                    Pievienots: @Model.CreatedDate.ToString("yyyy-MM-dd")
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">@Model.ProjectCount</div>
+        <div class="stat-label">Projekti</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">@(Model.IsActive ? "Aktīvs" : "Neaktīvs")</div>
+        <div class="stat-label">Statuss</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">@Model.CreatedDate.ToString("MM/yyyy")</div>
+        <div class="stat-label">Pievienošanas datums</div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="detail-card">
+            <h4><i class="fas fa-info-circle me-2"></i>Pamatinformācija</h4>
+            <div class="detail-item">
+                <span class="detail-label">Vārds:</span>
+                <span class="detail-value">@Model.FirstName</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Uzvārds:</span>
+                <span class="detail-value">@Model.LastName</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">E-pasts:</span>
+                <span class="detail-value">@Model.Email</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Telefons:</span>
+                <span class="detail-value">@(Model.PhoneNumber ?? "Nav norādīts")</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Lietotāja tips:</span>
+                <span class="detail-value">
+                    <span class="badge @(Model.UserType == "Admin" ? "badge-admin" : "badge-client")">
+                        @Model.UserType
+                    </span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="detail-card">
+            <h4><i class="fas fa-cog me-2"></i>Darbības</h4>
+            <div class="d-grid gap-2">
+                <a href="@Url.Action("EditUser", new { id = Model.Id, userType = Model.UserType })"
+                   class="btn btn-primary">
+                    <i class="fas fa-edit me-2"></i>Rediģēt profilu
+                </a>
+
+                <button type="button" class="btn btn-outline-warning" onclick="toggleUserStatus()">
+                    <i class="fas fa-power-off me-2"></i>
+                    @(Model.IsActive ? "Deaktivizēt" : "Aktivizēt")
+                </button>
+
+                <button type="button" class="btn btn-outline-danger"
+                        onclick="confirmDelete(@Model.Id, '@Model.UserType')">
+                    <i class="fas fa-trash me-2"></i>Dzēst lietotāju
+                </button>
+
+                <a href="@Url.Action("AllUsers")" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Atpakaļ pie saraksta
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ja klientam ir projekti, rādam tos -->
+@if (Model.UserType == "Client" && Model.ProjectCount > 0)
+{
+    <div class="detail-card">
+        <h4><i class="fas fa-project-diagram me-2"></i>Piešķirtie projekti</h4>
+        <p class="text-muted">Šim klientam ir piešķirti @Model.ProjectCount projekti.</p>
+        <!-- Šeit varam rādīt projektu sarakstu, kad tas būs pieejams -->
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function toggleUserStatus() {
+            if (confirm('Vai tiešām vēlaties @(Model.IsActive ? "deaktivizēt" : "aktivizēt") šo lietotāju?')) {
+                fetch('/Admin/ToggleUserStatus', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: @Model.Id,
+                        userType: '@Model.UserType',
+                        isActive: !@Model.IsActive.ToString().ToLower()
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Kļūda: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Radās kļūda');
+                });
+            }
+        }
+
+        function confirmDelete(userId, userType) {
+            if (confirm('Vai tiešām vēlaties dzēst šo lietotāju? Šo darbību nevarēs atsaukt!')) {
+                // Izveido formu dzēšanai
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/Admin/DeleteUser';
+
+                // Pievieno CSRF token
+                const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '__RequestVerificationToken';
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+
+                // Pievieno ID un userType
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = userId;
+                form.appendChild(idInput);
+
+                const typeInput = document.createElement('input');
+                typeInput.type = 'hidden';
+                typeInput.name = 'userType';
+                typeInput.value = userType;
+                form.appendChild(typeInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+}

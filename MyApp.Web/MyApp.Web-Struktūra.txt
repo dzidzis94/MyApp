@@ -1,0 +1,29 @@
+MyApp.Web/
+├── wwwroot/
+│   ├── css/
+│   │   ├── site.css          (pamata stili)
+│   │   ├── admin.css         (admin panelis)
+│   │   └── clients.css       (klientu saskarne)
+│   ├── js/
+│   │   └── app.js           (frontend JavaScript)
+│   └── lib/                 (Bootstrap, u.c.)
+├── Controllers/
+│   ├── AdminController.cs   (Admin CRUD operācijas)
+│   └── ClientController.cs  (Client CRUD operācijas)
+├── Models/
+│   ├── Admin.cs            (Admin modelis)
+│   ├── Client.cs           (Client modelis)
+│   └── ApplicationUser.cs  (Autorizācijas modelis)
+├── Views/
+│   ├── Admin/
+│   │   ├── Index.cshtml    (Admin panelis)
+│   │   ├── Create.cshtml   (Jauna admin forma)
+│   │   └── Edit.cshtml     (Admin rediģēšana)
+│   └── Client/
+│       ├── Index.cshtml    (Klientu saraksts)
+│       ├── Create.cshtml   (Jauna klienta forma)
+│       └── Edit.cshtml     (Klienta rediģēšana)
+└── Program.cs              (Dependency Injection)
+
+tree /F
+DarbuDB

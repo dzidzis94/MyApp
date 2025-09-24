@@ -1,0 +1,38 @@
+@model MyApp.Web.Models.ProjectEditViewModel
+@{
+    ViewData["Title"] = "Edit Project";
+}
+
+<h2>Edit Project</h2>
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Project.Id" />
+            <div class="form-group">
+                <label asp-for="Project.Title" class="control-label"></label>
+                <input asp-for="Project.Title" class="form-control" />
+                <span asp-validation-for="Project.Title" class="text-danger"></span>
+            </div>
+
+            <h4>Assign Clients</h4>
+            @for (var i = 0; i < Model.AllClients.Count; i++)
+            {
+                <div class="form-check">
+                    <input type="checkbox" name="SelectedClientIds" value="@Model.AllClients[i].Id"
+                           class="form-check-input" @(Model.SelectedClientIds.Contains(Model.AllClients[i].Id) ? "checked" : "") />
+                    <label class="form-check-label">@Model.AllClients[i].FirstName @Model.AllClients[i].LastName</label>
+                </div>
+            }
+
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>

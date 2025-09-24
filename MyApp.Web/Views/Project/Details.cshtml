@@ -1,0 +1,42 @@
+@model MyApp.Web.Models.Project
+@{
+    ViewData["Title"] = "Project Details";
+}
+
+<h2>@Model.Title</h2>
+
+<h3>Sub-Sections</h3>
+
+@if (User.IsInRole("Admin"))
+{
+    <form asp-action="AddSubSection" method="post">
+        <input type="hidden" name="projectId" value="@Model.Id" />
+        <div class="form-group">
+            <label for="title">New Sub-section Title</label>
+            <input type="text" name="title" class="form-control" />
+        </div>
+        <button type="submit" class="btn btn-primary">Add Sub-section</button>
+    </form>
+}
+
+<hr />
+
+@foreach (var subSection in Model.SubSections)
+{
+    <h4>@subSection.Title</h4>
+    @if (User.IsInRole("Client"))
+    {
+        <form asp-action="UpdateSubSectionData" method="post">
+            <input type="hidden" name="projectId" value="@Model.Id" />
+            <input type="hidden" name="subSectionId" value="@subSection.Id" />
+            <div class="form-group">
+                <textarea name="data" class="form-control">@subSection.Data</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    }
+    else
+    {
+        <p>@subSection.Data</p>
+    }
+}

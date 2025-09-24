@@ -1,0 +1,16 @@
+{
+  "Admins": [
+    {
+      "Id": 1,
+      "Name": "Default Admin"
+    }
+  ],
+  "Clients": [
+    {
+      "Id": 1,
+      "FirstName": "Default",
+      "LastName": "Client"
+    }
+  ],
+  "Projects": []
+}

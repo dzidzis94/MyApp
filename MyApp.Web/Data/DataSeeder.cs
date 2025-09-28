@@ -1,57 +1,90 @@
-﻿using Microsoft.EntityFrameworkCore;
-using MyApp.Web.Data;
-using MyApp.Web.Models;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+using MyApp.Web.Models.Entities;
+using MyApp.Web.Services;
+using System;
+using System.Linq;
 
-public static class DataSeeder
+namespace MyApp.Web.Data
 {
-    public static void SeedFromJson(DarbuContext context, string jsonPath)
+    public static class DataSeeder
     {
-        // ✅ 1. VISPIRMS: Izveido pirmo administratoru
-        if (!context.Admins.Any())
+        public static void Seed(IApplicationBuilder app)
         {
-            var defaultAdmin = new Admin
+            using (var serviceScope = app.ApplicationServices.CreateScope())
             {
-                Name = "Sistēmas",
-                LastName = "Administrators",
-                Email = "admin@example.com",
-                Password = "admin123",
-                PhoneNumber = "+371 12345678",
-                IsActive = true
-            };
-            context.Admins.Add(defaultAdmin);
-            context.SaveChanges();
-            Console.WriteLine("✅ Izveidots pirmais administrators: admin@example.com / admin123");
-        }
+                var context = serviceScope.ServiceProvider.GetService<DarbuContext>();
+                var authService = serviceScope.ServiceProvider.GetService<AuthService>();
 
-        // ✅ 2. TAD: Importē pārējos datus no JSON (ja vēlies)
-        if (System.IO.File.Exists(jsonPath))
-        {
-            try
-            {
-                var jsonData = System.IO.File.ReadAllText(jsonPath);
-                var data = System.Text.Json.JsonSerializer.Deserialize<ApplicationData>(jsonData);
-
-                if (data != null)
+                if (context == null || authService == null)
                 {
-                    // Importē klientus
-                    if (data.Clients != null && !context.Clients.Any())
-                    {
-                        context.Clients.AddRange(data.Clients);
-                    }
+                    throw new InvalidOperationException("Could not resolve services for data seeding.");
+                }
 
-                    // Importē projektus
-                    if (data.Projects != null && !context.Projects.Any())
+                // It's generally better to apply migrations at deployment time,
+                // but this ensures the database is created for local development.
+                context.Database.Migrate();
+
+                if (!context.Users.Any())
+                {
+                    // 1. Create Admin User and Admin Entity
+                    var adminUser = new User
                     {
-                        context.Projects.AddRange(data.Projects);
-                    }
+                        UserName = "admin",
+                        Email = "admin@myapp.com",
+                        PasswordHash = authService.HashPassword("password"),
+                        Role = "Admin"
+                    };
+                    context.Users.Add(adminUser);
+                    context.SaveChanges(); // Save to get the User ID
+
+                    var admin = new Admin { UserId = adminUser.Id };
+                    context.Admins.Add(admin);
+                    context.SaveChanges(); // Save to get the Admin ID
+
+                    // 2. Create Client User and Client Entity
+                    var clientUser = new User
+                    {
+                        UserName = "client",
+                        Email = "client@myapp.com",
+                        PasswordHash = authService.HashPassword("password"),
+                        Role = "Client"
+                    };
+                    context.Users.Add(clientUser);
+                    context.SaveChanges(); // Save to get the User ID
+
+                    var client = new Client { UserId = clientUser.Id };
+                    context.Clients.Add(client);
+
+                    // 3. Create Project linked to Admin
+                    var project = new Project
+                    {
+                        Title = "Sample Project",
+                        Description = "This is a sample project seeded by the application.",
+                        CreatedById = admin.Id
+                    };
+                    context.Projects.Add(project);
+
+                    // 4. Create Project Sub-Sections
+                    project.SubSections.Add(new ProjectSubSection
+                    {
+                        Title = "Sub-Section 1: Introduction",
+                        Description = "Please provide an introduction."
+                    });
+                    project.SubSections.Add(new ProjectSubSection
+                    {
+                        Title = "Sub-Section 2: Main Content",
+                        Description = "Please provide the main content."
+                    });
+                    project.SubSections.Add(new ProjectSubSection
+                    {
+                        Title = "Sub-Section 3: Conclusion",
+                        Description = "Please provide a conclusion."
+                    });
 
                     context.SaveChanges();
-                    Console.WriteLine("✅ Dati veiksmīgi importēti no JSON");
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Kļūda importējot datus: {ex.Message}");
             }
         }
     }

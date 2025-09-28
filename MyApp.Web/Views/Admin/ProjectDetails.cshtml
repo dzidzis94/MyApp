@@ -1,0 +1,55 @@
+@model Project
+@{
+    ViewData["Title"] = "Project Details";
+}
+
+<h1>Project Details: @Model.Title</h1>
+<p>@Model.Description</p>
+<p><em>Created by: @(Model.CreatedBy?.User?.UserName ?? "N/A") on @Model.CreatedAt.ToLocalTime()</em></p>
+
+
+<div>
+    <h4>Sub-Sections</h4>
+    <hr />
+    <a asp-action="AddSubSection" asp-route-projectId="@Model.Id" class="btn btn-primary mb-3">Add New Sub-Section</a>
+
+    @if (Model.SubSections.Any())
+    {
+        foreach (var subSection in Model.SubSections)
+        {
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>@subSection.Title</h5>
+                    <p class="card-text"><small class="text-muted">@subSection.Description</small></p>
+                </div>
+                <div class="card-body">
+                    <h6>Submissions:</h6>
+                    @if (subSection.Submissions.Any())
+                    {
+                        <ul class="list-group">
+                            @foreach (var submission in subSection.Submissions.OrderByDescending(s => s.SubmittedAt))
+                            {
+                                <li class="list-group-item">
+                                    <strong>@(submission.Client?.User?.UserName ?? "N/A")</strong> submitted on @submission.SubmittedAt.ToLocalTime()
+                                    <p class="mt-2"><strong>Content:</strong> @submission.Content</p>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p>No submissions yet.</p>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <p>No sub-sections have been added to this project yet.</p>
+    }
+</div>
+
+<div>
+    <a asp-action="Projects">Back to Projects</a>
+</div>

@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using MyApp.Web.Models.ViewModels;
+using System.Diagnostics;
 
 namespace MyApp.Web.Controllers
 {
@@ -6,16 +8,23 @@ namespace MyApp.Web.Controllers
     {
         public IActionResult Index()
         {
-            if (User.Identity.IsAuthenticated)
+            if (User.Identity?.IsAuthenticated ?? false)
             {
-                return RedirectToAction("Index", "Project");
+                if (User.IsInRole("Admin"))
+                {
+                    return RedirectToAction("Index", "Admin");
+                }
+                else if (User.IsInRole("Client"))
+                {
+                    return RedirectToAction("Index", "Client");
+                }
             }
             return View();
         }
 
         public IActionResult Error()
         {
-            return View();
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
 }

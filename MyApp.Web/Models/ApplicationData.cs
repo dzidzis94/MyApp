@@ -4,8 +4,7 @@ namespace MyApp.Web.Models
 {
     public class ApplicationData
     {
-        public List<Admin> Admins { get; set; } = new List<Admin>();
-        public List<Client> Clients { get; set; } = new List<Client>();
+        public List<User> Users { get; set; } = new List<User>();
         public List<Project> Projects { get; set; } = new List<Project>();
     }
 }

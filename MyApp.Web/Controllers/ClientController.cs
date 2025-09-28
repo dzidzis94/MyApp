@@ -1,128 +1,62 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MyApp.Web.Data;
+using Microsoft.AspNetCore.Mvc;
+using MyApp.Web.Services;
 using MyApp.Web.Models;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization; //  PIEVIENO ŠO
 
 namespace MyApp.Web.Controllers
 {
-    [Authorize(Roles = "Client,Admin")] //  PIEVIENO ŠO - gan klienti, gan admini var piekļūt
     public class ClientController : Controller
     {
-        private readonly DarbuContext _context;
+        private readonly DataService _dataService;
 
-        public ClientController(DarbuContext context)
+        public ClientController(DataService dataService)
         {
-            _context = context;
+            _dataService = dataService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            // Ja lietotājs ir klients, rāda tikai viņa datus
-            if (User.IsInRole("Client"))
-            {
-                var userEmail = User.Identity.Name;
-                var client = await _context.Clients.FirstOrDefaultAsync(c => c.Email == userEmail);
-
-                if (client != null)
-                {
-                    // Novirza uz projektiem, ja klients
-                    return RedirectToAction("Projects", new { clientId = client.Id });
-                }
-            }
-
-            // Adminiem rāda visu klientu sarakstu
-            var clients = await _context.Clients.ToListAsync();
+            var clients = _dataService.Data.Clients;
             return View(clients);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Projects(int? clientId)
-        {
-            // Nosaka, kurš klients skatās projekti
-            int currentClientId;
-
-            if (User.IsInRole("Admin") && clientId.HasValue)
-            {
-                // Adminis skata konkrēta klienta projektus
-                currentClientId = clientId.Value;
-            }
-            else if (User.IsInRole("Client"))
-            {
-                // Klients skata savus projektus
-                var userEmail = User.Identity.Name;
-                var client = await _context.Clients.FirstOrDefaultAsync(c => c.Email == userEmail);
-
-                if (client == null)
-                {
-                    return RedirectToAction("Logout", "Account");
-                }
-
-                currentClientId = client.Id;
-            }
-            else
-            {
-                return RedirectToAction("Index");
-            }
-
-            // Iegūst klienta projektus
-            var assignedProjects = await _context.Projects
-                .Where(p => p.AssignedClientIds != null && p.AssignedClientIds.Contains(currentClientId))
-                .ToListAsync();
-
-            var clientInfo = await _context.Clients.FindAsync(currentClientId);
-            ViewBag.ClientName = clientInfo != null ? $"{clientInfo.FirstName} {clientInfo.LastName}" : "Klients";
-            ViewBag.ClientId = currentClientId;
-
-            return View(assignedProjects);
-        }
-
         [HttpPost]
-        public async Task<IActionResult> UpdateProjectData(int projectId, string sectionData)
+        public IActionResult SelectClient(int clientId)
         {
-            // Ļauj klientam atjaunināt projekta datus
-            if (User.IsInRole("Client"))
+            if (clientId == 0)
             {
-                var project = await _context.Projects.FindAsync(projectId);
-                if (project != null)
-                {
-                    // Šeit var implementēt datu atjaunināšanas loģiku
-                    // Piemēram: project.SectionData = sectionData;
-                    await _context.SaveChangesAsync();
-
-                    TempData["SuccessMessage"] = "Dati veiksmīgi atjaunināti!";
-                }
+                // If no client is selected, return to the selection page with an error.
+                ViewBag.ErrorMessage = "Please select a client.";
+                var clients = _dataService.Data.Clients;
+                return View("Index", clients);
             }
 
+            // Store the selected client ID in TempData, which persists for one redirect.
+            TempData["SelectedClientId"] = clientId;
             return RedirectToAction("Projects");
         }
 
-        // Admina funkcija - projekta piešķiršana klientam
-        [Authorize(Roles = "Admin")]
-        [HttpPost]
-        public async Task<IActionResult> AssignProjectToClient(int projectId, int clientId)
+        [HttpGet]
+        public IActionResult Projects()
         {
-            var project = await _context.Projects.FindAsync(projectId);
-            if (project != null)
+            if (TempData["SelectedClientId"] is not int clientId)
             {
-                if (project.AssignedClientIds == null)
-                {
-                    project.AssignedClientIds = new List<int>();
-                }
-
-                if (!project.AssignedClientIds.Contains(clientId))
-                {
-                    project.AssignedClientIds.Add(clientId);
-                    await _context.SaveChangesAsync();
-
-                    TempData["SuccessMessage"] = "Projekts veiksmīgi piešķirts klientam!";
-                }
+                // If no client is selected (e.g., direct navigation), redirect to the selection page.
+                return RedirectToAction("Index");
             }
 
-            return RedirectToAction("Projects", new { clientId = clientId });
+            // Keep the client ID in TempData for subsequent requests within the client's session.
+            TempData.Keep("SelectedClientId");
+
+            var assignedProjects = _dataService.Data.Projects
+                .Where(p => p.AssignedClientIds.Contains(clientId))
+                .ToList();
+
+            var client = _dataService.Data.Clients.FirstOrDefault(c => c.Id == clientId);
+            ViewBag.ClientName = client != null ? $"{client.FirstName} {client.LastName}" : "Client";
+
+            return View(assignedProjects);
         }
     }
 }

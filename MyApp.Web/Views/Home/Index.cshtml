@@ -1,39 +1,16 @@
-﻿@{
-    ViewData["Title"] = "Sākumlapa";
+@{
+    ViewData["Title"] = "Login";
 }
 
-<div class="text-center py-5 bg-light">
-    <h1 class="display-4">Sveicināti Darbu Uzskaites Sistemā</h1>
-    <p class="lead">Efektsīva darba uzskaite un klientu pārvaldība vienuviet</p>
-    <a class="btn btn-primary btn-lg mt-3" asp-controller="Admin" asp-action="Index">Sākt darbu</a>
-</div>
-
-<div class="row mt-5">
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="fas fa-user-cog fa-3x text-primary"></i>
-                <h5 class="card-title mt-2">Administrēšana</h5>
-                <p class="card-text">Pārvaldi lietotājus un projektu uzdevumus</p>
-            </div>
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Please select your role:</p>
+    <div class="row mt-4">
+        <div class="col-md-6 text-center">
+            <a class="btn btn-primary btn-lg w-50" href="@Url.Action("Index", "Admin")">Admin</a>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="fas fa-users fa-3x text-success"></i>
-                <h5 class="card-title mt-2">Klienti</h5>
-                <p class="card-text">Skaties un pārvaldi klientu datus</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="fas fa-tasks fa-3x text-info"></i>
-                <h5 class="card-title mt-2">Projekti</h5>
-                <p class="card-text">Plāno un seko līdzi projektiem</p>
-            </div>
+        <div class="col-md-6 text-center">
+            <a class="btn btn-secondary btn-lg w-50" href="@Url.Action("Index", "Client")">Client</a>
         </div>
     </div>
 </div>

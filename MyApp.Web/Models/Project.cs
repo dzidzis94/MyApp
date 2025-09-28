@@ -7,6 +7,6 @@ namespace MyApp.Web.Models
         public int Id { get; set; }
         public string? Title { get; set; }
         public List<SubSection> SubSections { get; set; } = new List<SubSection>();
-        public List<int> AssignedClientIds { get; set; } = new List<int>();
+        public List<int> AssignedUserIds { get; set; } = new List<int>();
     }
 }

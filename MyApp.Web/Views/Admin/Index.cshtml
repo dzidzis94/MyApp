@@ -1,116 +1,13 @@
-﻿@{
-    ViewData["Title"] = "Admin Panelis";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+@{
+    ViewData["Title"] = "Admin Dashboard";
 }
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
-}
+<h1>Admin Dashboard</h1>
+<p>Welcome, Admin!</p>
 
-<div class="admin-header">
-    <h1>Admin Panelis</h1>
-    <div class="user-info">
-        <div class="user-avatar">AD</div>
-        <div>
-            <div>Admin Lietotājs</div>
-            <small>Pēdējais ielogojies: @DateTime.Now.ToString("yyyy-MM-dd HH:mm")</small>
-        </div>
-    </div>
-</div>
-
-<!-- Stats Grid -->
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-icon" style="background-color: rgba(67, 97, 238, 0.1); color: var(--primary);">
-            <i class="fas fa-users"></i>
-        </div>
-        <div class="stat-value">@ViewBag.AdminCount</div>
-        <div class="stat-title">Administratori</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-icon" style="background-color: rgba(76, 201, 240, 0.1); color: var(--success);">
-            <i class="fas fa-user-friends"></i>
-        </div>
-        <div class="stat-value">@ViewBag.ClientCount</div>
-        <div class="stat-title">Klienti</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-icon" style="background-color: rgba(247, 127, 83, 0.1); color: #f77f53;">
-            <i class="fas fa-project-diagram"></i>
-        </div>
-        <div class="stat-value">@ViewBag.ProjectCount</div>
-        <div class="stat-title">Aktīvie Projekti</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-icon" style="background-color: rgba(106, 176, 76, 0.1); color: #6ab04c;">
-            <i class="fas fa-chart-line"></i>
-        </div>
-        <div class="stat-value">€12,584</div>
-        <div class="stat-title">Kopējie Ienākumi</div>
-    </div>
-</div>
-
-<!-- Quick Actions -->
-<div class="quick-actions">
-    <h2 class="section-title">Ātrās Darbības</h2>
-    <div class="action-buttons">
-        <a href="@Url.Action("Index", "Admin")" class="action-btn">
-            <i class="fas fa-user-cog"></i>
-            <span>Pārvaldīt Administratorus</span>
-        </a>
-
-        <a href="@Url.Action("Index", "Client")" class="action-btn">
-            <i class="fas fa-users"></i>
-            <span>Pārvaldīt Klientus</span>
-        </a>
-
-        <a href="#" class="action-btn">
-            <i class="fas fa-plus-circle"></i>
-            <span>Jauns Projekts</span>
-        </a>
-
-        <a href="#" class="action-btn">
-            <i class="fas fa-chart-bar"></i>
-            <span>Atskaites</span>
-        </a>
-    </div>
-</div>
-
-<!-- Recent Activity -->
-<div class="quick-actions">
-    <h2 class="section-title">Pēdējās Darbības</h2>
-    <div class="list-group">
-        <div class="list-group-item d-flex align-items-center">
-            <div class="bg-primary rounded-circle p-2 me-3">
-                <i class="fas fa-user-plus text-white"></i>
-            </div>
-            <div class="flex-grow-1">
-                <div>Pievienots jauns administrators</div>
-                <small class="text-muted">Pirms 15 minūtēm</small>
-            </div>
-        </div>
-
-        <div class="list-group-item d-flex align-items-center">
-            <div class="bg-success rounded-circle p-2 me-3">
-                <i class="fas fa-check-circle text-white"></i>
-            </div>
-            <div class="flex-grow-1">
-                <div>Projekts "Mājaslapas izstrāde" pabeigts</div>
-                <small class="text-muted">Pirms 2 stundām</small>
-            </div>
-        </div>
-
-        <div class="list-group-item d-flex align-items-center">
-            <div class="bg-info rounded-circle p-2 me-3">
-                <i class="fas fa-file-invoice-dollar text-white"></i>
-            </div>
-            <div class="flex-grow-1">
-                <div>Izrakstīts rēķins klientam "SIA ABC"</div>
-                <small class="text-muted">Vakar, 14:25</small>
-            </div>
-        </div>
-    </div>
+<div class="mt-4">
+    <a href="@Url.Action("Clients", "Admin")" class="btn btn-primary">Manage Clients</a>
+    <a href="#" class="btn btn-info">Manage Admins</a>
+    <a href="#" class="btn btn-success">Manage Projects</a>
+    <a href="#" class="btn btn-secondary">View Dashboard</a>
 </div>

@@ -1,47 +1,69 @@
-﻿using Microsoft.EntityFrameworkCore;
-using MyApp.Web.Models;
+using Microsoft.EntityFrameworkCore;
+using MyApp.Web.Models.Entities;
 
 namespace MyApp.Web.Data
 {
     public class DarbuContext : DbContext
     {
-        public DarbuContext(DbContextOptions<DarbuContext> options)
-            : base(options)
+        public DarbuContext(DbContextOptions<DarbuContext> options) : base(options)
         {
         }
 
-        public DbSet<Admin> Admins { get; set; }
-        public DbSet<Client> Clients { get; set; }
-        public DbSet<Project> Projects { get; set; }
+        public DbSet<User> Users { get; set; } = null!;
+        public DbSet<Admin> Admins { get; set; } = null!;
+        public DbSet<Client> Clients { get; set; } = null!;
+        public DbSet<Project> Projects { get; set; } = null!;
+        public DbSet<ProjectSubSection> ProjectSubSections { get; set; } = null!;
+        public DbSet<ProjectSubSectionSubmission> ProjectSubSectionSubmissions { get; set; } = null!;
+        public DbSet<RecentActivity> RecentActivities { get; set; } = null!;
 
-        // 👇 Pievieno šo metodi, lai konfigurētu Identity
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Konfigurē Admin entītiju
-            modelBuilder.Entity<Admin>(entity =>
-            {
-                entity.HasKey(a => a.Id); // Primārais atslēga
-                entity.Property(a => a.Id)
-                      .ValueGeneratedOnAdd(); // Identity īpašība
-            });
+            // User -> Admin (1:1)
+            modelBuilder.Entity<Admin>()
+                .HasOne(a => a.User)
+                .WithOne()
+                .HasForeignKey<Admin>(a => a.UserId);
 
-            // Konfigurē Client entītiju
-            modelBuilder.Entity<Client>(entity =>
-            {
-                entity.HasKey(c => c.Id);
-                entity.Property(c => c.Id)
-                      .ValueGeneratedOnAdd();
-            });
+            // User -> Client (1:1)
+            modelBuilder.Entity<Client>()
+                .HasOne(c => c.User)
+                .WithOne()
+                .HasForeignKey<Client>(c => c.UserId);
 
-            // Konfigurē Project entītiju
-            modelBuilder.Entity<Project>(entity =>
-            {
-                entity.HasKey(p => p.Id);
-                entity.Property(p => p.Id)
-                      .ValueGeneratedOnAdd();
-            });
+            // Admins -> Projects (1:N)
+            modelBuilder.Entity<Project>()
+                .HasOne(p => p.CreatedBy)
+                .WithMany()
+                .HasForeignKey(p => p.CreatedById);
+
+            // Projects -> ProjectSubSections (1:N)
+            modelBuilder.Entity<Project>()
+                .HasMany(p => p.SubSections)
+                .WithOne(s => s.Project)
+                .HasForeignKey(s => s.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ProjectSubSections -> ProjectSubSectionSubmissions (1:N)
+            modelBuilder.Entity<ProjectSubSectionSubmission>()
+                .HasOne(s => s.ProjectSubSection)
+                .WithMany(ss => ss.Submissions)
+                .HasForeignKey(s => s.SubSectionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Clients -> ProjectSubSectionSubmissions (1:N)
+            modelBuilder.Entity<ProjectSubSectionSubmission>()
+                .HasOne(s => s.Client)
+                .WithMany()
+                .HasForeignKey(s => s.ClientId);
+
+            // Users -> RecentActivity (1:N)
+            modelBuilder.Entity<RecentActivity>()
+                .HasOne(ra => ra.User)
+                .WithMany()
+                .HasForeignKey(ra => ra.UserId);
         }
     }
 }

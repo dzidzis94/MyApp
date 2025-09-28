@@ -1,21 +1,21 @@
-using MyApp.Web.Models;
+using MyApp.Web.Data;
+using MyApp.Web.Models.Entities;
 using System.Linq;
-using BCrypt.Net;
 
 namespace MyApp.Web.Services
 {
     public class AuthService
     {
-        private readonly DataService _dataService;
+        private readonly DarbuContext _context;
 
-        public AuthService(DataService dataService)
+        public AuthService(DarbuContext context)
         {
-            _dataService = dataService;
+            _context = context;
         }
 
-        public User Authenticate(string email, string password)
+        public User? Authenticate(string email, string password)
         {
-            var user = _dataService.Data.Users.SingleOrDefault(u => u.Email == email);
+            var user = _context.Users.SingleOrDefault(u => u.Email == email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             {
                 return null;

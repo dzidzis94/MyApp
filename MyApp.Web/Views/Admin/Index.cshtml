@@ -1,3 +1,4 @@
+@model IEnumerable<RecentActivity>
 @{
     ViewData["Title"] = "Admin Dashboard";
 }
@@ -5,9 +6,37 @@
 <h1>Admin Dashboard</h1>
 <p>Welcome, Admin!</p>
 
-<div class="mt-4">
-    <a href="@Url.Action("Clients", "Admin")" class="btn btn-primary">Manage Clients</a>
-    <a href="#" class="btn btn-info">Manage Admins</a>
-    <a href="#" class="btn btn-success">Manage Projects</a>
-    <a href="#" class="btn btn-secondary">View Dashboard</a>
+<div class="mt-4 mb-4">
+    <a asp-action="Projects" class="btn btn-success">Manage Projects</a>
+    <a asp-action="Clients" class="btn btn-primary">Manage Clients</a>
 </div>
+
+<h3>Recent Activity</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Action</th>
+            <th>Timestamp</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Any())
+        {
+            foreach (var activity in Model)
+            {
+                <tr>
+                    <td>@(activity.User?.UserName ?? "N/A")</td>
+                    <td>@activity.Action</td>
+                    <td>@activity.CreatedAt.ToLocalTime()</td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="3" class="text-center">No recent activity.</td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,62 +1,101 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MyApp.Web.Services;
-using MyApp.Web.Models;
+using Microsoft.EntityFrameworkCore;
+using MyApp.Web.Data;
+using MyApp.Web.Models.Entities;
+using MyApp.Web.Models.ViewModels;
+using System;
 using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace MyApp.Web.Controllers
 {
+    [Authorize(Roles = "Client")]
     public class ClientController : Controller
     {
-        private readonly DataService _dataService;
+        private readonly DarbuContext _context;
 
-        public ClientController(DataService dataService)
+        public ClientController(DarbuContext context)
         {
-            _dataService = dataService;
+            _context = context;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            // NOTE: The current database schema does not support assigning specific projects to clients.
+            // As a result, we are displaying all available projects.
+            // This could be revised if an assignment feature is added to the schema.
+            var allProjects = await _context.Projects.ToListAsync();
+            return View(allProjects);
+        }
+
+        public async Task<IActionResult> ProjectDetails(int id)
+        {
+            var project = await _context.Projects
+                .Include(p => p.SubSections)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (project == null)
+            {
+                return NotFound();
+            }
+
+            return View(project);
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> FillSubSection(int id)
         {
-            var clients = _dataService.Data.Clients;
-            return View(clients);
+            var subSection = await _context.ProjectSubSections.FindAsync(id);
+            if (subSection == null)
+            {
+                return NotFound();
+            }
+
+            var model = new SubSectionFillViewModel
+            {
+                SubSectionId = subSection.Id,
+                Title = subSection.Title,
+                Content = "" // Or load previous data if needed
+            };
+
+            ViewBag.ProjectId = subSection.ProjectId;
+            return View(model);
         }
 
         [HttpPost]
-        public IActionResult SelectClient(int clientId)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> FillSubSection(SubSectionFillViewModel model)
         {
-            if (clientId == 0)
+            if (!ModelState.IsValid)
             {
-                // If no client is selected, return to the selection page with an error.
-                ViewBag.ErrorMessage = "Please select a client.";
-                var clients = _dataService.Data.Clients;
-                return View("Index", clients);
+                var subSectionForProjectId = await _context.ProjectSubSections.FindAsync(model.SubSectionId);
+                ViewBag.ProjectId = subSectionForProjectId?.ProjectId;
+                return View(model);
             }
 
-            // Store the selected client ID in TempData, which persists for one redirect.
-            TempData["SelectedClientId"] = clientId;
-            return RedirectToAction("Projects");
-        }
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var client = await _context.Clients.FirstOrDefaultAsync(c => c.UserId == userId);
 
-        [HttpGet]
-        public IActionResult Projects()
-        {
-            if (TempData["SelectedClientId"] is not int clientId)
+            if (client == null)
             {
-                // If no client is selected (e.g., direct navigation), redirect to the selection page.
-                return RedirectToAction("Index");
+                return Unauthorized("You are not an authorized client.");
             }
 
-            // Keep the client ID in TempData for subsequent requests within the client's session.
-            TempData.Keep("SelectedClientId");
+            var submission = new ProjectSubSectionSubmission
+            {
+                SubSectionId = model.SubSectionId,
+                ClientId = client.Id,
+                Content = model.Content,
+                SubmittedAt = DateTime.UtcNow
+            };
 
-            var assignedProjects = _dataService.Data.Projects
-                .Where(p => p.AssignedClientIds.Contains(clientId))
-                .ToList();
+            _context.ProjectSubSectionSubmissions.Add(submission);
+            await _context.SaveChangesAsync();
 
-            var client = _dataService.Data.Clients.FirstOrDefault(c => c.Id == clientId);
-            ViewBag.ClientName = client != null ? $"{client.FirstName} {client.LastName}" : "Client";
-
-            return View(assignedProjects);
+            var subSection = await _context.ProjectSubSections.FindAsync(model.SubSectionId);
+            return RedirectToAction("ProjectDetails", new { id = subSection.ProjectId });
         }
     }
 }
